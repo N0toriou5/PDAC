@@ -1,7 +1,5 @@
-setwd('/Users/danielemercatelli/Desktop/Data_Analysis/BRUNO_LAB/CD_rev/')
 ################################################################################
-### ESTRAZIONE E INTEGRAZIONE: GSE21501
-### Input: Colonne specifiche identificate dall'utente
+### Extraction and format of PDAC dataset from GEO: GSE21501
 ################################################################################
 
 suppressPackageStartupMessages({
@@ -25,12 +23,10 @@ fd <- fData(gset)
 # --- 2. MAPPING SONDE -> GENI ---
 message("   Mapping Sonde -> Geni...")
 
-# In questa piattaforma Agilent, il simbolo è spesso in 'GeneName'
-# Cerchiamo la colonna migliore
 sym_col <- grep("GeneName|GENE_SYMBOL|Symbol", colnames(fd), ignore.case = TRUE, value = TRUE)[1]
 
 if(is.na(sym_col)) {
-  # Fallback se non trova GeneName
+  # Fallback if GeneName not found
   sym_col <- grep("ORF", colnames(fd), ignore.case = TRUE, value = TRUE)[1]
 }
 
@@ -61,15 +57,11 @@ if(!is.na(sym_col)) {
 message("   Filtraggio Campioni e Parsing Survival...")
 
 # Identifichiamo le colonne target nei metadati
-# NOTA: R a volte rinomina le colonne (es. ch2.5 diventa ch2.5)
-# Usiamo grep per trovarle anche se R ha cambiato leggermente la formattazione
 col_risk   <- grep("characteristics_ch2\\.5", colnames(pd), value = TRUE)
 col_time   <- grep("characteristics_ch2($|\\.)", colnames(pd), value = TRUE) # Cerca ch2 esatto (o seguito da punto)
 col_event  <- grep("characteristics_ch2\\.1", colnames(pd), value = TRUE)
 
-# Raffiniamo la ricerca di col_time per evitare che prenda ch2.1 o ch2.5
 col_time <- col_time[!col_time %in% c(col_risk, col_event)]
-# Di solito è la prima rimasta
 if(length(col_time) > 1) col_time <- col_time[1] 
 
 message(paste0("   Colonna Risk:  ", col_risk))
@@ -127,7 +119,6 @@ if(length(col_risk)>0 && length(col_time)>0 && length(col_event)>0) {
     message(paste0("    Eventi (Morti): ", sum(list_surv_21501[[gse_id]]$status == 1)))
     
     # UNIONE ALLE LISTE PRINCIPALI
-    # (Decommenta le righe sotto per unire effettivamente)
     list_expr <- c(list_expr, list_expr_21501)
     list_surv <- c(list_surv, list_surv_21501)
     message(">>> Dataset aggiunto alle liste 'list_expr' e 'list_surv'.")
